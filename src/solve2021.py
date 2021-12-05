@@ -2,6 +2,8 @@
 import os
 import sys
 
+from pprint import pprint
+
 """
 My reference implementations of the AoC 2021 challenges.
 Used to compare my solutions and runtimes with the rust version.
@@ -58,6 +60,114 @@ def day2_2(data):
             x += qty
             d += a * qty
     return d * x
+
+
+# ---- Day 3 -----
+
+def bit_freqs(data):
+    b_freqs = [[0,0] for b in range(len(data[0]))]
+    for l in data:
+        for i, b in enumerate(l):
+            b_freqs[i][int(b)] += 1
+    return b_freqs
+
+def day3_1(data):
+    b_freqs = bit_freqs(data)
+    gamma_bin = ''.join('1' if b[1] > b[0] else '0' for b in b_freqs)
+    epsilon_bin = ''.join('1' if b[1] < b[0] else '0' for b in b_freqs)
+    gamma = int(gamma_bin, 2)
+    epsilon = int(epsilon_bin, 2)
+    print('gamma', gamma, 'epsilon', epsilon)
+    return gamma * epsilon
+
+# ~~
+
+def filter_data(data, bit_pos, bit_val):
+    bit_val = str(int(bit_val))
+    res = [l for l in data if l[bit_pos] == bit_val]
+    return res
+
+def reduce_freq(data, high):
+    remaining = data.copy()
+    bit_pos = 0
+    while len(remaining) > 1:
+        b_freqs = bit_freqs(remaining)
+        b0_freq, b1_freq = b_freqs[bit_pos]
+        remaining = filter_data(
+            remaining,
+            bit_pos,
+            b1_freq >= b0_freq if high else b0_freq > b1_freq)
+        bit_pos += 1
+    return int(remaining[0], 2)
+
+def day3_2(data):
+    o2_rate = reduce_freq(data, 1)
+    co2_rate = reduce_freq(data, 0)
+    return o2_rate * co2_rate
+
+
+# ---- Day 4 -----
+
+def generator_d4(data):
+    draw = (int(n) for n in data.pop(0).split(','))
+    data.pop(0)
+    boards = []
+    board = []
+    num_map = {} # { 12: [(board1, x, y), ...]'}
+    y = 0
+    for line in data:
+        if not line:
+            boards.append(board)
+            board = []
+            y = 0
+        else:
+            board.append([])
+            x = 0
+            for n in line.split(' '):
+                if not n.strip():
+                    continue
+                n = int(n)
+                board[y].append([n, 0])
+                num_map.setdefault(n, []).append((board, x, y))
+                x += 1
+            y += 1
+    boards.append(board)
+    return draw, boards, num_map
+
+def is_winner_board_d4(board, x, y):
+    # winner col/row has a sum of 5
+    hsum = sum(board[y][i][1] for i in range(5))
+    vsum = sum(board[i][x][1] for i in range(5))
+    return 5 in (vsum, hsum)
+
+def score_winner_board_d4(board, number):
+    return number * sum(
+            board[y][x][0]
+            for y in range(5)
+            for x in range(5)
+            if not board[y][x][1]
+        )
+
+def day4_1(data):
+    draw, boards, num_map = generator_d4(data.copy())
+    for number in draw:
+        for (board, x, y) in num_map.get(number, []):
+            board[y][x][1] = 1
+            if is_winner_board_d4(board, x, y):
+                return score_winner_board_d4(board, number)
+
+def day4_2(data):
+    draw, boards, num_map = generator_d4(data.copy())
+    for number in draw:
+        for (board, x, y) in num_map.get(number, []):
+            if not board in boards:
+                continue
+            board[y][x][1] = 1
+            if is_winner_board_d4(board, x, y):
+                boards.remove(board)
+                if not boards:
+                    return score_winner_board_d4(board, number)
+
 
 
 # ---- Runner -----

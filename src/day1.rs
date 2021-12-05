@@ -16,6 +16,8 @@ pub fn part1_chars(input: &str) -> u32 {
     c
 }
 
+
+// Alternative to the `for` loop version above
 #[aoc(day1, part1, iter)]
 pub fn part1_iter(input: &str) -> u32 {
     let mut prev = u32::MAX;
