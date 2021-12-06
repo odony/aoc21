@@ -193,6 +193,24 @@ def day5_2(data):
     return day5_1(data, exclude_diag=False)
 
 
+# ---- Day 6 -----
+from collections import Counter
+
+def day6_1(data, days=80):
+    fish = Counter(map(int, data[0].split(',')))
+    for d in range(days):
+        fish = Counter({age - 1: num_fish
+                        for age, num_fish in fish.items()})
+        fish[8] += fish[-1]
+        fish[6] += fish[-1]
+        fish[-1] = 0
+    return sum(fish.values())
+
+def day6_2(data):
+    return day6_1(data, 256)
+    
+
+
 # ---- Runner -----
 
 if __name__ == "__main__":
