@@ -169,6 +169,29 @@ def day4_2(data):
                     return score_winner_board_d4(board, number)
 
 
+# ---- Day 5 -----
+import re
+from collections import defaultdict
+
+def day5_1(data, exclude_diag=True):
+    floor = defaultdict(int)
+    for l in data:
+        x1, y1, x2, y2 = map(int, re.findall("\d+", l))
+        if exclude_diag and x1 != x2 and y1 != y2:
+            continue
+
+        x, y = x1, y1
+        floor[x, y] += 1
+        while x != x2 or y != y2:
+            x += ((x2 - x) / abs(x2 - x)) if (x2 - x) else 0
+            y += ((y2 - y) / abs(y2 - y)) if (y2 - y) else 0
+            floor[x, y] += 1
+
+    return sum(1 for n in floor.values() if n > 1)
+
+def day5_2(data):
+    return day5_1(data, exclude_diag=False)
+
 
 # ---- Runner -----
 
