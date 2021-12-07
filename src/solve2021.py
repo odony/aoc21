@@ -210,6 +210,25 @@ def day6_2(data):
     return day6_1(data, 256)
     
 
+# ---- Day 7 -----
+from collections import Counter
+
+def day7_1(data):
+    crabs = Counter(map(int, data[0].split(',')))
+    sums = [
+        sum((abs(c - align_pos) * n) for c, n in crabs.items())
+        for align_pos in range(max(crabs.elements()))
+    ]
+    return sorted(sums)[0]
+
+def day7_2(data):
+    crabs = Counter(map(int, data[0].split(',')))
+    sums = [
+        sum((abs(c - align_pos) * ((abs(c - align_pos) + 1) / 2) * n)
+            for c, n in crabs.items())
+        for align_pos in range(max(crabs.elements()))
+    ]
+    return int(sorted(sums)[0])
 
 # ---- Runner -----
 
