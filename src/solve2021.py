@@ -230,6 +230,41 @@ def day7_2(data):
     ]
     return int(sorted(sums)[0])
 
+# ---- Day 8 -----
+import itertools
+import time
+
+def day8_1(data):
+    return sum(
+        1 # let's not abuse bool shall we
+        for line in data
+        for digit in line.split()[-4:]
+        if len(digit) in {2, 3, 4, 7})
+
+def day8_2(data):
+    DISPLAY = "abcdefg"
+    NUMBERS = ("abcefg", "cf", "acdeg", "acdfg", "bcdf", "abdfg", "abdefg", "acf", "abcdefg", "abcdfg")
+    RAINBOW = defaultdict(dict)
+    # 7! permutations (5040)
+    for perm in itertools.permutations(DISPLAY):
+        translator = {segment: DISPLAY[i] for i, segment in enumerate(perm)}
+        digits = [frozenset(translator[seg] for seg in n) for n in NUMBERS]
+        one = digits[1] # our index key
+        mapping = {digit: i for i, digit in enumerate(digits)}
+        RAINBOW[one][frozenset(digits)] = mapping
+    result = 0
+    for l in data:
+        left, right = [p.split() for p in l.split(' | ')]
+        [one] = [w for w in left if len(w) == 2]
+        # n * log(n) because of the index on one
+        key = frozenset(one)
+        for words, mapping in RAINBOW[key].items():
+            if frozenset(frozenset(w) for w in left) == words:
+                result += sum(mapping[frozenset(w)] * 10**i for i, w in enumerate(right[::-1]))
+                break
+    return result
+
+
 # ---- Runner -----
 
 if __name__ == "__main__":
