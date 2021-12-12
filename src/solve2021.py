@@ -265,6 +265,145 @@ def day8_2(data):
     return result
 
 
+# ---- Day 9 -----
+
+from math import prod
+
+def d9_adj(i, j):
+    return (i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)
+
+def day9_1(data):
+    floor = {(i, j): int(x) for i, line in enumerate(data) for j, x in enumerate(line.strip())}
+    return sum(cell + 1
+               for p, cell in floor.items()
+               if all(cell < floor.get(a, 9)
+                      for a in d9_adj(*p)))
+
+def day9_2(data):
+    floor = {(i, j): int(x) for i, line in enumerate(data) for j, x in enumerate(line.strip())}
+    basins = {}
+
+    def explore_dfs(p, idx):
+        if p in basins or floor.get(p, 9) == 9:
+            return
+        basins[p] = idx
+        for a in d9_adj(*p):
+            explore_dfs(a, idx)
+
+    for i, p in enumerate(floor.keys()):
+        explore_dfs(p, i)
+
+    return prod(c for _, c in Counter(basins.values()).most_common(3))
+
+# ---- Day 10 -----
+
+def day10_1(data):
+    ops = {'(': ')', '{': '}', '[': ']', '<': '>'}
+    score_map = {')': 3, ']': 57, '}': 1197, '>': 25137}
+    score = 0
+    for l in data:
+        state = []
+        for c in l:
+            if c in ops:
+                state.append(c)
+            elif state and c == ops[state[-1]]:
+                state.pop()
+            else:
+                print(f"illegal {c} in: {l}")
+                score += score_map[c]
+                break
+    return score
+
+
+def day10_2(data):
+    ops = {'(': ')', '{': '}', '[': ']', '<': '>'}
+    score_map = {')': 1, ']': 2, '}': 3, '>': 4}
+    scores = []
+    for l in data:
+        state = []
+        for c in l:
+            if c in ops:
+                state.append(c)
+            elif state and c == ops[state[-1]]:
+                state.pop()
+            else:
+                # corrupted line: discarded
+                state = []
+                break
+        if state:
+            # repair the line
+            score = 0
+            for c in state[::-1]:
+                score = score * 5 + score_map[ops[c]]
+            print(f"score: {score} for incomplete line: {l}")
+            scores.append(score)
+    return sorted(scores)[len(scores)//2]
+
+
+# ---- Day 11 -----
+
+# So, day 9 all over again? ;-)
+def octopus_adj(i, j):
+    return ((i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1),
+            (i - 1, j - 1), (i + 1, j - 1), (i + 1, j + 1), (i - 1, j + 1))
+
+def day11_1(data, steps=100, stop_sync=False):
+    energy = {(i, j): int(x) for i, line in enumerate(data) for j, x in enumerate(line.strip())}
+    flashes = 0
+    for s in range(steps):
+        flashed = set()
+        def flash_or_not(octopus):
+            if octopus not in energy:
+                return
+            energy[octopus] += 1
+            if energy[octopus] > 9 and octopus not in flashed:
+                flashed.add(octopus)
+                for neighbour in octopus_adj(*octopus):
+                    flash_or_not(neighbour)
+        for o in energy.keys():
+            flash_or_not(o)
+        for o in flashed:
+            energy[o] = 0
+        flashes += len(flashed)
+        if stop_sync and len(flashed) == len(energy):
+            return s+1
+    return flashes
+
+def day11_2(data):
+    return day11_1(data, steps=1000, stop_sync=1)
+
+
+# ---- Day 12 -----
+
+def day12_1(data, allowed_dupes=0):
+    is_small = lambda cave: cave.lower() == cave
+    all_paths = set()
+    paths  = defaultdict(list)
+    for l in data:
+        p_in, p_out = l.split("-")
+        paths[p_in].append(p_out)
+        paths[p_out].append(p_in)
+    def visit(p, path, visited, allow_dupes):
+        if p in visited:
+            if not allow_dupes or p in {"start", "end"}:
+                return
+            allow_dupes -= 1
+        path = path + (p,)
+        if is_small(p):
+            visited[p] += 1
+        if p == 'end':
+            all_paths.add(path)
+            return
+        for dest in paths[p]:
+            visit(dest, path, visited.copy(), allow_dupes)
+    visit("start", tuple(), defaultdict(int), allowed_dupes)
+    return len(all_paths)
+
+def day12_2(data):
+    return day12_1(data, allowed_dupes=1)
+
+
+
 # ---- Runner -----
 
 if __name__ == "__main__":
