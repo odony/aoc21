@@ -403,6 +403,41 @@ def day12_2(data):
     return day12_1(data, allowed_dupes=1)
 
 
+# ---- Day 13 -----
+
+def day13_1(data):
+    dots  = {}
+    axes = "xy"
+
+    while(True):
+        l = data.pop(0)
+        if not l.strip():
+            break
+        x, y = map(int, l.strip().split(","))
+        dots[(x,y)] = 1
+
+    for i, l in enumerate(data):
+        axis, fold = re.search("along ([xy])=(\d+)", l).groups()
+        fold = int(fold)
+        ax_idx = axes.index(axis)
+        for p in list(dots):
+            if p[ax_idx] > fold:
+                new_pos = p[ax_idx] - 2 * (p[ax_idx] - fold)
+                new_p = list(p)
+                new_p[ax_idx] = new_pos
+                del dots[p]
+                dots[tuple(new_p)] = 1
+        print(sum(1 for _, num in dots.items() if num))
+
+    for j in range(0, 6):
+        for i in range(0, 100):
+            if (i,j) in dots:
+                print("#", end="")
+            else:
+                print(" ", end="")
+        print()
+    return
+
 
 # ---- Runner -----
 
