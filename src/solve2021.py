@@ -439,6 +439,49 @@ def day13_1(data):
     return
 
 
+# ---- Day 14 -----
+
+def day14_1(data, rounds=10):
+    polymer = data[0]
+    subst = dict([l.split(" -> ") for l in data[2:]])
+
+    # Each polymer is made of overlapping pairs:
+    # NNCB          =  NN NC CB
+    # NCNBCHB       =  NC CN NB BC CH HB
+    # NBCCNBBBCBHCB =  NB BC CC CN NB BB BB BC CB BH HC CB
+
+    # For each pair, we'll get 2 resulting pairs after inserting
+    # the new element, right and left. E.g. HN + C => HC + CN
+    # So we can simulate the insertions by incrementing the
+    # number of each new pair, instead of actually walking the
+    # exponentially long polymer string.
+    pairs = Counter(f"{p}{q}" for (p, q) in zip(polymer, polymer[1:]))
+    for _ in range(rounds):
+        new_pairs = Counter()
+        for pair, count in pairs.items():
+            p, q = pair
+            # Count only the new pairs created by the insertion,
+            # the old pair is consumed by the operation
+            new_pairs[f"{p}{subst[pair]}"] += count
+            new_pairs[f"{subst[pair]}{q}"] += count
+        pairs = new_pairs
+
+    # To count individual elements, we can count the leftmost element of
+    # each pair + the final element of the polymer, which never changes.
+    counter = Counter()
+    counter[polymer[-1]] = 1 # last element
+    for pair, count in pairs.items():
+        counter[pair[0]] += count
+
+    freqs = counter.most_common()
+    return freqs[0][1] - freqs[-1][1]
+
+def day14_2(data):
+    return day14_1(data, rounds=40)
+
+
+
+
 # ---- Runner -----
 
 if __name__ == "__main__":
