@@ -481,6 +481,56 @@ def day14_2(data):
 
 
 
+# ---- Day 15 -----
+import math
+
+def day15_explore(floor, width):
+    def adj(i, j):
+        # tried left/bottom only but doesn't match part 2 ¯\_(ツ)_/¯
+        # return (i + 1, j), (i, j + 1)
+        return (i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)
+
+    exit = (width - 1, width - 1)
+    explored = {} # visited cells
+    exploration_stack = {(0,0): 0} # exploration candidates
+
+    def extract_cheapest_target(stack):
+        min_cost, min_target = math.inf, None
+        for target, cost in stack.items():
+            if cost < min_cost:
+                min_cost = cost
+                min_target = target
+        return min_target, stack.pop(min_target)
+
+    while exploration_stack:
+        target, cost = extract_cheapest_target(exploration_stack)
+        if target == exit:
+            return cost
+        explored[target] = cost
+        for nxt in adj(*target):
+            # ignore neighbours if already visited with cheapest cost
+            if nxt not in floor or explored.get(nxt, math.inf) < cost:
+                continue
+            nxt_cost = cost + floor[nxt]
+            if nxt_cost < exploration_stack.get(nxt, math.inf):
+                exploration_stack[nxt] = nxt_cost
+
+def day15_1(data):
+    floor = {(i, j): int(x) for i, line in enumerate(data) for j, x in enumerate(line.strip())}
+    return day15_explore(floor, len(data))
+
+def day15_2(data):
+    width = len(data)
+    floor = {
+        (a * width + i, b * width + j): (int(x) + a + b - 1) % 9 + 1
+            for i, line in enumerate(data)
+            for j, x in enumerate(line.strip())
+            for a in range(5)
+            for b in range(5)
+    }
+    return day15_explore(floor, width * 5)
+
+
 
 # ---- Runner -----
 
