@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+from __future__ import annotations
+
 import os
 import sys
 
@@ -529,6 +531,86 @@ def day15_2(data):
             for b in range(5)
     }
     return day15_explore(floor, width * 5)
+
+
+# ---- Day 16 -----
+
+def parse_bits(data):
+    data = data[0]
+
+    # convert to int, then to binary string + zerofill
+    data_int = int(data, 16)
+    bin_len = 4 * len(data)
+    data_bin = f"{data_int:0{bin_len}b}"
+
+    # shared state
+    packets = []
+    seekpos = 0
+
+    # operators
+    OPERATORS = {
+        0: sum,
+        1: math.prod,
+        2: min,
+        3: max,
+        5: lambda l: l[0] > l[1],
+        6: lambda l: l[0] < l[1],
+        7: lambda l: l[0] == l[1]
+    }
+
+    def read_bin(length):
+        nonlocal data_bin, seekpos
+        byte_str = data_bin[seekpos:seekpos + length]
+        seekpos += length
+        return byte_str
+
+    def read_int(length):
+        byte_str = read_bin(length)
+        return int(byte_str, 2)
+    
+    def read_literal():
+        byte_str = ""
+        while True:
+            cont = read_int(1)
+            byte_str += read_bin(4)
+            if not cont:
+                break
+        return int(byte_str, 2)
+    
+    def read_packet():
+        nonlocal seekpos, packets
+        version = read_int(3)
+        ptype = read_int(3)
+        subp = []
+        p = {'version': version, 'type': ptype, 'sub': subp}
+
+        if ptype == 4:
+            p['val']= read_literal()
+        else:
+            if read_int(1):
+                # variable number of packets
+                nsub = read_int(11)
+                for _ in range(nsub):
+                    subp.append(read_packet())
+            else:
+                # variable length of packets
+                sublen = read_int(15)
+                eom = seekpos + sublen
+                while seekpos < eom:
+                    subp.append(read_packet())
+            p['val'] = OPERATORS[ptype]([s['val'] for s in subp])
+        packets.append(p)
+        return p
+
+    return read_packet(), packets
+
+def day16_1(data):
+    _, packets = parse_bits(data)
+    return sum(p['version'] for p in packets)
+
+def day16_2(data):
+    packet, _ = parse_bits(data)
+    return packet['val']
 
 
 
